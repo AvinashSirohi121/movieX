@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import "./App.css";
 import { fetchDatafromAPI } from "./utils/api";
-import { getApiConfiguration } from "./redux/Slices/homeSlice";
+import { getApiConfiguration, getGenres } from "./redux/Slices/homeSlice";
 import { useDispatch, useSelector } from "react-redux";
 
 import Header from "./components/Header/Header";
@@ -15,17 +15,17 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
   const dispatch = useDispatch();
-  const { url } = useSelector((state) => state.home);
-  console.log("URL ==>", url);
+  const { url, genres } = useSelector((state) => state.home);
+  //console.log("URL ==>", url, " Generes =>", genres);
 
   const fetchApiConfig = async () => {
     await fetchDatafromAPI("/configuration")
       .then((res) => {
-        console.log("configurations =>", res);
+        //console.log("configurations =>", res);
         const url = {
-          backdrop: res?.data?.images?.secure_base_url + "original",
-          poster: res?.data?.images?.secure_base_url + "original",
-          profile: res?.data?.images?.secure_base_url + "original",
+          backdrop: res?.images?.secure_base_url + "original",
+          poster: res?.images?.secure_base_url + "original",
+          profile: res?.images?.secure_base_url + "original",
         };
 
         dispatch(getApiConfiguration(url));
@@ -34,9 +34,30 @@ function App() {
         console.log("error =>>", e);
       });
   };
+
+  const genersCall = async () => {
+    let promises = [];
+    let endPoints = ["tv", "movie"];
+
+    let allGeneres = {};
+
+    endPoints.forEach((url) => {
+      promises.push(fetchDatafromAPI(`/genre/${url}/list`));
+    });
+    const data = await Promise.all(promises);
+    //console.log("Data in App.jsx =>>",data);
+    data.map((items) =>
+      items?.data?.genres.map((item) => (allGeneres[item.id] = item))
+    );
+
+    // console.log("All Generes =>",allGeneres);
+    if (allGeneres != "" && allGeneres != []) dispatch(getGenres(allGeneres));
+  };
+
   useEffect(() => {
-    console.log("Calling getMovieData");
+    //console.log("Calling getMovieData");
     fetchApiConfig();
+    genersCall();
   }, []);
 
   return (

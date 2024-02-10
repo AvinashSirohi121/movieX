@@ -13,7 +13,7 @@ const useFetch = (url) => {
 
     fetchDatafromAPI(url)
       .then((res) => {
-        console.log("Response =>", res);
+        //console.log("Response =>", res);
         if (res != null && res != "" && res != undefined) {
           setData(res);
         }
